@@ -47,6 +47,7 @@ namespace EasyChecker
                 double time = stopWatch.Elapsed.TotalMilliseconds;
                 times.Add(Convert.ToInt32(time));
                 socks.Close();
+                Thread.Sleep(100);
             }
 
             return times;
@@ -61,6 +62,7 @@ namespace EasyChecker
             for (int i = 0; i < 8; i++)
             {
                 times.Add(Convert.ToInt32(ping.Send(ipStr, 50, bufferBytes).RoundtripTime));
+                Thread.Sleep(100);
             }
 
             return times;

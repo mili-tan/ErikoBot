@@ -41,6 +41,7 @@ namespace ErikoBot
             BotClient.StartReceiving(Array.Empty<UpdateType>());
 
             Console.ReadLine();
+            Console.WriteLine("Exit");
             BotClient.StopReceiving();
         }
 
@@ -86,18 +87,18 @@ namespace ErikoBot
                     case "/ping":
                         var replyPing = Ping.MPing(msgStr);
 
-                        //int packetLoss = 0;
-                        //foreach (var item in replyPing)
-                        //{
-                        //    if (item == 0)
-                        //    {
-                        //        packetLoss++;
-                        //    }
-                        //}
+                        int packetLoss = 0;
+                        foreach (var item in replyPing)
+                        {
+                            if (item == 0)
+                            {
+                                packetLoss++;
+                            }
+                        }
 
                         BotClient.SendTextMessageAsync(message.Chat.Id,
-                            $"{msgStr} : {replyPing.Min()} / {replyPing.Average()} / {replyPing.Max()}ms");
-                            //$"Packet loss : {packetLoss} / {replyPing.Count}";
+                            $"{msgStr} : {replyPing.Min()} / {replyPing.Average()} / {replyPing.Max()}ms"
+                            + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
                         break;
                     case "/tcping":
                         var ipPort = msgStr.Split(":");
