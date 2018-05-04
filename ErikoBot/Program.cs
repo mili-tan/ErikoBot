@@ -15,7 +15,7 @@ namespace ErikoBot
     {
         private static TelegramBotClient BotClient;
 
-        static void Main()
+        static void Main(string[] args)
         {
             Console.WriteLine("Telegram Eriko Network Bot");
             string tokenStr;
@@ -23,13 +23,17 @@ namespace ErikoBot
             {
                 tokenStr = File.ReadAllText("token.text");
             }
+            else if(!string.IsNullOrWhiteSpace(string.Join("",args)))
+            {
+                tokenStr = string.Join("", args);
+            }
             else
             {
                 Console.WriteLine("Token:");
                 tokenStr = Console.ReadLine();
             }
 
-            WebProxy webProxy = new WebProxy("127.0.0.1", 2222);
+            WebProxy webProxy = new WebProxy("127.0.0.1", 10800);
             BotClient = new TelegramBotClient(tokenStr, webProxy);
 
             Console.Title = "Bot:@" + BotClient.GetMeAsync().Result.Username;
