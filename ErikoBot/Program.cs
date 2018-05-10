@@ -5,6 +5,7 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using EasyChecker;
 using MojoUnity;
@@ -65,7 +66,7 @@ namespace ErikoBot
                     case "/ip":
                         if (IsIP(msgStr))
                         {
-                            BotClient.SendTextMessageAsync(message.Chat.Id, msgStr + " : " + GeoIp(msgStr));
+                            BotClient.SendTextMessageAsync(message.Chat.Id, $"{msgStr} : {GeoIp(msgStr)} {GeoIsp(msgStr)}");
                         }
 
                         break;
@@ -77,7 +78,6 @@ namespace ErikoBot
 
                             BotClient.SendTextMessageAsync(message.Chat.Id,
                                 $"1.1.1.1 DNS : {HttpsDnsHostAddresses(msgStr)}");
-
 
                             BotClient.SendTextMessageAsync(message.Chat.Id,
                                 $"Google DNS : {HttpsDnsHostAddresses(msgStr, true)}");
@@ -159,7 +159,21 @@ namespace ErikoBot
                 addr += "," + locJson.AsObjectGetString("city");
             }
 
+            addr += " / ";
+
+            if (!string.IsNullOrWhiteSpace(locJson.AsObjectGetString("organization")))
+            {
+                addr += locJson.AsObjectGetString("organization");
+            }
+
             return addr;
+        }
+
+        public static string GeoIsp(string ipStr)
+        {
+            string getIpStr = new WebClient().DownloadString($"http://ip.taobao.com/service/getIpInfo.php?ip={ipStr}");
+            JsonValue ipJson = Json.Parse(getIpStr).AsObjectGet("data");
+            return Encoding.UTF8.GetString(Encoding.Default.GetBytes(ipJson.AsObjectGetString("city") + ipJson.AsObjectGetString("isp"))).Replace("X", "");
         }
 
         public static bool IsIP(string ip)
