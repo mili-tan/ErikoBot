@@ -58,63 +58,84 @@ namespace ErikoBot
 
             Console.WriteLine($"@{e.Message.From.Username}: " + e.Message.Text);
 
+            if (IsIP(message.Text))
+            {
+                BotClient.SendTextMessageAsync(message.Chat.Id,
+                    $"{message.Text} : {GeoIp(message.Text)} {GeoIsp(message.Text)}");
+            }
+
             if (message.Text.Split(' ').Length > 1)
             {
                 string msgStr = message.Text.Split(' ')[1];
-                switch (message.Text.Split(' ')[0])
+                try
                 {
-                    case "/ip":
-                        if (IsIP(msgStr))
-                        {
-                            BotClient.SendTextMessageAsync(message.Chat.Id, $"{msgStr} : {GeoIp(msgStr)} {GeoIsp(msgStr)}");
-                        }
-
-                        break;
-                    case "/dns":
-                        try
-                        {
-                            BotClient.SendTextMessageAsync(message.Chat.Id,
-                                $"DNSPOD PubDNS : {Dns.GetHostAddresses(msgStr)[0]}");
-
-                            BotClient.SendTextMessageAsync(message.Chat.Id,
-                                $"1.1.1.1 DNS : {HttpsDnsHostAddresses(msgStr)}");
-
-                            BotClient.SendTextMessageAsync(message.Chat.Id,
-                                $"Google DNS : {HttpsDnsHostAddresses(msgStr, true)}");
-                        }
-                        catch (Exception exception)
-                        {
-                            BotClient.SendTextMessageAsync(message.Chat.Id, exception.Message);
-                        }
-
-                        break;
-                    case "/ping":
-                        var replyPing = Ping.MPing(msgStr);
-
-                        int packetLoss = 0;
-                        foreach (var item in replyPing)
-                        {
-                            if (item == 0)
+                    switch (message.Text.Split(' ')[0])
+                    {
+                        case "/ip":
+                            if (IsIP(msgStr))
                             {
-                                packetLoss++;
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"{msgStr} : {GeoIp(msgStr)} {GeoIsp(msgStr)}");
                             }
-                        }
+                            else
+                            {
+                                string ipAddr = HttpsDnsHostAddresses(msgStr);
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"{msgStr}({ipAddr}) : {GeoIp(ipAddr)} {GeoIsp(ipAddr)}");
+                            }
 
-                        BotClient.SendTextMessageAsync(message.Chat.Id,
-                            $"{msgStr} : {replyPing.Min()} / {replyPing.Average()} / {replyPing.Max()}ms"
-                            + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
-                        break;
-                    case "/tcping":
-                        var ipPort = msgStr.Split(":");
-                        if (ipPort.Length == 2)
-                        {
-                            var replyTcping = Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]));
+                            break;
+                        case "/dns":
+                            try
+                            {
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"DNSPOD PubDNS : {Dns.GetHostAddresses(msgStr)[0]}");
+
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"1.1.1.1 DNS : {HttpsDnsHostAddresses(msgStr)}");
+
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"Google DNS : {HttpsDnsHostAddresses(msgStr, true)}");
+                            }
+                            catch (Exception exception)
+                            {
+                                BotClient.SendTextMessageAsync(message.Chat.Id, exception.Message);
+                            }
+
+                            break;
+                        case "/ping":
+                            var replyPing = Ping.MPing(msgStr);
+
+                            int packetLoss = 0;
+                            foreach (var item in replyPing)
+                            {
+                                if (item == 0)
+                                {
+                                    packetLoss++;
+                                }
+                            }
+
                             BotClient.SendTextMessageAsync(message.Chat.Id,
-                                $"{msgStr} : {replyTcping.Min()} / {replyTcping.Average()} / {replyTcping.Max()}ms");
-                        }
+                                $"{msgStr} : {replyPing.Min()} / {replyPing.Average()} / {replyPing.Max()}ms"
+                                + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
+                            break;
+                        case "/tcping":
+                            var ipPort = msgStr.Split(":");
+                            if (ipPort.Length == 2)
+                            {
+                                var replyTcping = Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]));
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"{msgStr} : {replyTcping.Min()} / {replyTcping.Average()} / {replyTcping.Max()}ms");
+                            }
 
-                        break;
+                            break;
+                    }
                 }
+                catch (Exception exception)
+                {
+                    Console.WriteLine(exception);
+                }
+                
             }
         }
 
@@ -159,11 +180,9 @@ namespace ErikoBot
                 addr += "," + locJson.AsObjectGetString("city");
             }
 
-            addr += " / ";
-
             if (!string.IsNullOrWhiteSpace(locJson.AsObjectGetString("organization")))
             {
-                addr += locJson.AsObjectGetString("organization");
+                addr += " / " + locJson.AsObjectGetString("organization");
             }
 
             return addr;
