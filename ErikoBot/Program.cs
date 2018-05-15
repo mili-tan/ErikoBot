@@ -15,6 +15,7 @@ namespace ErikoBot
     static class Program
     {
         private static TelegramBotClient BotClient;
+        private static WebProxy MWebProxy = new WebProxy("127.0.0.1", 10800);
 
         static void Main(string[] args)
         {
@@ -34,8 +35,7 @@ namespace ErikoBot
                 tokenStr = Console.ReadLine();
             }
 
-            WebProxy webProxy = new WebProxy("127.0.0.1", 10800);
-            BotClient = new TelegramBotClient(tokenStr, webProxy);
+            BotClient = new TelegramBotClient(tokenStr, MWebProxy);
 
             Console.Title = "Bot:@" + BotClient.GetMeAsync().Result.Username;
             Console.WriteLine("Connected");
@@ -84,6 +84,10 @@ namespace ErikoBot
                                     $"{msgStr}({ipAddr}) : {GeoIp(ipAddr)} {GeoIsp(ipAddr)}");
                             }
 
+                            break;
+                        case "/ipv6":
+                            BotClient.SendTextMessageAsync(message.Chat.Id,
+                                $"{msgStr} : {GeoIp(msgStr)} / {GeoIpZXv6(msgStr)}");
                             break;
                         case "/dns":
                             try
@@ -172,20 +176,36 @@ namespace ErikoBot
 
         public static string GeoIp(string ipStr)
         {
-            string locStr = new WebClient().DownloadString($"https://api.ip.sb/geoip/{ipStr}");
-            JsonValue locJson = Json.Parse(locStr);
-            string addr = locJson.AsObjectGetString("country_code3");
-            if (!string.IsNullOrWhiteSpace(locJson.AsObjectGetString("city")))
+            WebClient webClient = new WebClient();
+            webClient.Proxy = MWebProxy;
+            webClient.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.2767.0 Safari/537.36";
+
+            string locStr = webClient.DownloadString($"https://api.ip.sb/geoip/{ipStr}");
+            JsonValue locDataJson = Json.Parse(locStr);
+            string addr = locDataJson.AsObjectGetString("country_code3");
+            if (!string.IsNullOrWhiteSpace(locDataJson.AsObjectGetString("city")))
             {
-                addr += "," + locJson.AsObjectGetString("city");
+                addr += "," + locDataJson.AsObjectGetString("city");
             }
 
-            if (!string.IsNullOrWhiteSpace(locJson.AsObjectGetString("organization")))
+            if (!string.IsNullOrWhiteSpace(locDataJson.AsObjectGetString("organization")))
             {
-                addr += " / " + locJson.AsObjectGetString("organization");
+                addr += " / " + locDataJson.AsObjectGetString("organization");
             }
 
             return addr;
+        }
+
+        public static string GeoIpZXv6(string ipStr)
+        {
+            WebClient webClient = new WebClient();
+            webClient.Proxy = MWebProxy;
+            webClient.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.2767.0 Safari/537.36";
+
+            string locStr = webClient.DownloadString($"http://ip.zxinc.org/api.php?type=json&ip={ipStr}");
+            JsonValue locDataJson = Json.Parse(locStr).AsObjectGet("data");
+            string addrLocationr = locDataJson.AsObjectGetString("location");
+            return addrLocationr;
         }
 
         public static string GeoIsp(string ipStr)
