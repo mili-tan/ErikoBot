@@ -15,7 +15,7 @@ namespace ErikoBot
     static class Program
     {
         private static TelegramBotClient BotClient;
-        private static WebProxy MWebProxy = new WebProxy("127.0.0.1", 10800);
+        private static readonly WebProxy MWebProxy = new WebProxy("127.0.0.1", 10800);
 
         static void Main(string[] args)
         {
@@ -93,7 +93,7 @@ namespace ErikoBot
                             try
                             {
                                 BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"DNSPOD PubDNS : {Dns.GetHostAddresses(msgStr)[0]}");
+                                    $"DNSPOD PubDNS : {HttpDnsPodHostAddresses(msgStr)}");
 
                                 BotClient.SendTextMessageAsync(message.Chat.Id,
                                     $"1.1.1.1 DNS : {HttpsDnsHostAddresses(msgStr)}");
@@ -174,11 +174,26 @@ namespace ErikoBot
             return IsIP(ipAnswerStr) ? ipAnswerStr : HttpsDnsHostAddresses(ipAnswerStr);
         }
 
+        public static string HttpDnsPodHostAddresses(string serverIpStr)
+        {
+
+            string dnsStr = new WebClient().DownloadString(
+                $"http://119.29.29.29/d?dn={serverIpStr}");
+            dnsStr = dnsStr.Split(';')[0];
+            return dnsStr;
+        }
+
         public static string GeoIp(string ipStr)
         {
-            WebClient webClient = new WebClient();
-            webClient.Proxy = MWebProxy;
-            webClient.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.2767.0 Safari/537.36";
+            WebClient webClient = new WebClient
+            {
+                Proxy = MWebProxy,
+                Headers =
+                {
+                    ["User-Agent"] =
+                        "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.2767.0 Safari/537.36"
+                }
+            };
 
             string locStr = webClient.DownloadString($"https://api.ip.sb/geoip/{ipStr}");
             JsonValue locDataJson = Json.Parse(locStr);
@@ -198,9 +213,15 @@ namespace ErikoBot
 
         public static string GeoIpZXv6(string ipStr)
         {
-            WebClient webClient = new WebClient();
-            webClient.Proxy = MWebProxy;
-            webClient.Headers["User-Agent"] = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.2767.0 Safari/537.36";
+            WebClient webClient = new WebClient
+            {
+                Proxy = MWebProxy,
+                Headers =
+                {
+                    ["User-Agent"] =
+                        "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.2767.0 Safari/537.36"
+                }
+            };
 
             string locStr = webClient.DownloadString($"http://ip.zxinc.org/api.php?type=json&ip={ipStr}");
             JsonValue locDataJson = Json.Parse(locStr).AsObjectGet("data");
