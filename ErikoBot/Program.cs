@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -119,27 +120,82 @@ namespace ErikoBot
                                 }
                             }
 
-                            BotClient.SendTextMessageAsync(message.Chat.Id,
-                                $"{msgStr} : {replyPing.Min()} / {replyPing.Average()} / {replyPing.Max()}ms"
-                                + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
+                            if (packetLoss == replyPing.Count)
+                            {
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                     $"Packet loss : {packetLoss} / {replyPing.Count}");
+                            }
+                            else
+                            {
+                                List<int> pingList = new List<int>();
+                                for (int i = 0; i < replyPing.Count - 1; i++)
+                                {
+                                    if (replyPing[i] != 0)
+                                    {
+                                        pingList.Add(replyPing[i]);
+                                    }
+                                }
+
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    $"{msgStr} : {pingList.Min()} / {pingList.Average():0.00} / {pingList.Max()}ms"
+                                    + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
+                            }
                             break;
                         case "/tcping":
-                            var ipPort = msgStr.Split(":");
+                            var ipPort = msgStr.Split(':', '：', ' ');
                             if (ipPort.Length == 2)
                             {
                                 var replyTcping = Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]));
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"{msgStr} : {replyTcping.Min()} / {replyTcping.Average()} / {replyTcping.Max()}ms");
-                            }
 
+                                int packetLossTcp = 0;
+                                foreach (var item in replyTcping)
+                                {
+                                    if (item == 0)
+                                    {
+                                        packetLossTcp++;
+                                    }
+                                }
+
+                                if (packetLossTcp == replyTcping.Count)
+                                {
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"Packet loss : {packetLossTcp} / {replyTcping.Count}");
+                                }
+                                else
+                                {
+                                    List<int> tcpingList = new List<int>();
+                                    for (int i = 0; i < replyTcping.Count - 1; i++)
+                                    {
+                                        if (replyTcping[i] != 0)
+                                        {
+                                            tcpingList.Add(replyTcping[i]);
+                                        }
+                                    }
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"{msgStr} : {tcpingList.Min()} / {tcpingList.Average():0.00} / {tcpingList.Max()}ms"
+                                        + $"\n\rPacket loss : {packetLossTcp} / {replyTcping.Count}");
+                                }
+                            }
+                            break;
+
+                            default:
+                                BotClient.SendTextMessageAsync(message.Chat.Id,
+                                    @"意外的指令。");
                             break;
                     }
                 }
                 catch (Exception exception)
                 {
                     Console.WriteLine(exception);
+                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                        @"非常抱歉，可能了一些意外的故障，请重试。");
                 }
-                
+
+            }
+            else
+            {
+                BotClient.SendTextMessageAsync(message.Chat.Id,
+                    @"意外的指令。");
             }
         }
 
