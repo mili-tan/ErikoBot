@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using static ErikoBot.Program;
 
 namespace EasyChecker
 {
@@ -26,7 +27,7 @@ namespace EasyChecker
                 }
                 catch
                 {
-                    point = new IPEndPoint(Dns.GetHostAddresses(ip)[0], port);
+                    point = new IPEndPoint(IPAddress.Parse(HttpDnsPodHostAddresses(ip).Trim()), port);
                 }
 
 
