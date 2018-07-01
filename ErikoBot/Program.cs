@@ -55,7 +55,9 @@ namespace ErikoBot
         {
             var message = e.Message;
 
-            if (message == null || message.Type != MessageType.TextMessage) return;
+            if (message == null) return;
+            if (message.Type != MessageType.TextMessage)
+                    BotClient.SendTextMessageAsync(message.Chat.Id, "不被支援的媒体类型");
 
             Console.WriteLine($"@{e.Message.From.Username}: " + e.Message.Text);
 
@@ -65,12 +67,12 @@ namespace ErikoBot
                     $"{message.Text} : {GeoIp(message.Text)} {GeoIsp(message.Text)}");
             }
 
-            if (message.Text.Split(' ').Length > 1)
+            if (message.Text.Replace("  ", " ").Split(' ').Length > 1)
             {
-                string msgStr = message.Text.Split(' ')[1];
+                string msgStr = message.Text.Replace("  ", " ").Split(' ')[1];
                 try
                 {
-                    switch (message.Text.Split(' ')[0])
+                    switch (message.Text.Replace("  ", " ").Split(' ')[0])
                     {
                         case "/ip":
                             if (IsIP(msgStr))
@@ -123,7 +125,7 @@ namespace ErikoBot
                             if (packetLoss == replyPing.Count)
                             {
                                 BotClient.SendTextMessageAsync(message.Chat.Id,
-                                     $"Packet loss : {packetLoss} / {replyPing.Count}");
+                                     "Packet loss : All");
                             }
                             else
                             {
@@ -159,7 +161,7 @@ namespace ErikoBot
                                 if (packetLossTcp == replyTcping.Count)
                                 {
                                     BotClient.SendTextMessageAsync(message.Chat.Id,
-                                        $"Packet loss : {packetLossTcp} / {replyTcping.Count}");
+                                        "Packet loss : All");
                                 }
                                 else
                                 {
