@@ -190,7 +190,7 @@ namespace ErikoBot
                 {
                     Console.WriteLine(exception);
                     BotClient.SendTextMessageAsync(message.Chat.Id,
-                        @"非常抱歉，可能了一些意外的故障，请重试。");
+                        @"非常抱歉，可能发生了一些意外的故障，请重试。");
                 }
 
             }
