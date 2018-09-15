@@ -57,7 +57,7 @@ namespace ErikoBot
 
             if (message == null) return;
             if (message.Type != MessageType.TextMessage)
-                    BotClient.SendTextMessageAsync(message.Chat.Id, "不被支援的媒体类型。");
+                Console.WriteLine("不被支援的媒体类型。");
 
             Console.WriteLine($"@{e.Message.From.Username}: " + e.Message.Text);
 
