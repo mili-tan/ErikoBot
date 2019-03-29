@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Net;
 using Telegram.Bot;
 using Telegram.Bot.Args;
@@ -69,130 +70,131 @@ namespace ErikoBot
 
             if (message.Text.Replace("  ", " ").Split(' ').Length > 1)
             {
-                string msgStr = message.Text.Replace("  ", " ").Split(' ')[1];
-                try
+                var bgWorker = new BackgroundWorker();
+                bgWorker.DoWork += (o, args) =>
                 {
-                    switch (message.Text.Replace("  ", " ").Split(' ')[0])
+                    string msgStr = message.Text.Replace("  ", " ").Split(' ')[1];
+                    try
                     {
-                        case "/ip":
-                            if (IsIP(msgStr))
-                            {
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"{msgStr} : {GeoIp(msgStr)} {GeoIsp(msgStr)}");
-                            }
-                            else
-                            {
-                                string ipAddr = HttpsDnsHostAddresses(msgStr);
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"{msgStr}({ipAddr}) : {GeoIp(ipAddr)} {GeoIsp(ipAddr)}");
-                            }
-
-                            break;
-                        case "/ipv6":
-                            BotClient.SendTextMessageAsync(message.Chat.Id,
-                                $"{msgStr} : {GeoIp(msgStr)} / {GeoIpZXv6(msgStr)}");
-                            break;
-                        case "/dns":
-                            try
-                            {
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"DNSPOD PubDNS : {HttpDnsPodHostAddresses(msgStr)}");
-
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"1.1.1.1 DNS : {HttpsDnsHostAddresses(msgStr)}");
-
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"Google DNS : {HttpsDnsHostAddresses(msgStr, true)}");
-                            }
-                            catch (Exception exception)
-                            {
-                                BotClient.SendTextMessageAsync(message.Chat.Id, exception.Message);
-                            }
-
-                            break;
-                        case "/ping":
-                            var replyPing = Ping.MPing(msgStr);
-
-                            int packetLoss = 0;
-                            foreach (var item in replyPing)
-                            {
-                                if (item == 0)
+                        switch (message.Text.Replace("  ", " ").Split(' ')[0])
+                        {
+                            case "/ip":
+                                if (IsIP(msgStr))
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"{msgStr} : {GeoIp(msgStr)}");
+                                else
                                 {
-                                    packetLoss++;
+                                    string ipAddr = HttpsDnsHostAddresses(msgStr);
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"{msgStr}({ipAddr}) : {GeoIp(ipAddr)}");
                                 }
-                            }
+                                break;
 
-                            if (packetLoss == replyPing.Count)
-                            {
+                            case "/ipv6":
                                 BotClient.SendTextMessageAsync(message.Chat.Id,
-                                     "Packet loss : All");
-                            }
-                            else
-                            {
-                                List<int> pingList = new List<int>();
-                                for (int i = 0; i < replyPing.Count - 1; i++)
+                                    $"{msgStr} : {GeoIp(msgStr)} / {GeoIpZXv6(msgStr)}");
+                                break;
+
+                            case "/dns":
+                                try
                                 {
-                                    if (replyPing[i] != 0)
-                                    {
-                                        pingList.Add(replyPing[i]);
-                                    }
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"DNSPOD PubDNS : {HttpDnsPodHostAddresses(msgStr)}");
+
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"1.1.1.1 DNS : {HttpsDnsHostAddresses(msgStr)}");
+
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"Google DNS : {HttpsDnsHostAddresses(msgStr, true)}");
                                 }
+                                catch (Exception exception)
+                                {
+                                    BotClient.SendTextMessageAsync(message.Chat.Id, exception.Message);
+                                }
+                                break;
 
-                                BotClient.SendTextMessageAsync(message.Chat.Id,
-                                    $"{msgStr} : {pingList.Min()} / {pingList.Average():0.00} / {pingList.Max()}ms"
-                                    + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
-                            }
-                            break;
-                        case "/tcping":
-                            var ipPort = msgStr.Split(':', '：', ' ');
-                            if (ipPort.Length == 2)
-                            {
-                                var replyTcping = Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]));
+                            case "/ping":
+                                var replyPing = Ping.MPing(msgStr);
 
-                                int packetLossTcp = 0;
-                                foreach (var item in replyTcping)
+                                int packetLoss = 0;
+                                foreach (var item in replyPing)
                                 {
                                     if (item == 0)
                                     {
-                                        packetLossTcp++;
+                                        packetLoss++;
                                     }
                                 }
 
-                                if (packetLossTcp == replyTcping.Count)
+                                if (packetLoss == replyPing.Count)
                                 {
                                     BotClient.SendTextMessageAsync(message.Chat.Id,
-                                        "Packet loss : All");
+                                         "Packet loss : All");
                                 }
                                 else
                                 {
-                                    List<int> tcpingList = new List<int>();
-                                    for (int i = 0; i < replyTcping.Count - 1; i++)
+                                    List<int> pingList = new List<int>();
+                                    for (int i = 0; i < replyPing.Count - 1; i++)
                                     {
-                                        if (replyTcping[i] != 0)
+                                        if (replyPing[i] != 0)
                                         {
-                                            tcpingList.Add(replyTcping[i]);
+                                            pingList.Add(replyPing[i]);
                                         }
                                     }
+
                                     BotClient.SendTextMessageAsync(message.Chat.Id,
-                                        $"{msgStr} : {tcpingList.Min()} / {tcpingList.Average():0.00} / {tcpingList.Max()}ms"
-                                        + $"\n\rPacket loss : {packetLossTcp} / {replyTcping.Count}");
+                                        $"{msgStr} : {pingList.Min()} / {pingList.Average():0.00} / {pingList.Max()}ms"
+                                        + $"\n\rPacket loss : {packetLoss} / {replyPing.Count}");
                                 }
-                            }
-                            break;
+                                break;
+
+                            case "/tcping":
+                                var ipPort = msgStr.Split(':', '：', ' ');
+                                if (ipPort.Length == 2)
+                                {
+                                    var replyTcping = Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]));
+
+                                    int packetLossTcp = 0;
+                                    foreach (var item in replyTcping)
+                                    {
+                                        if (item == 0)
+                                        {
+                                            packetLossTcp++;
+                                        }
+                                    }
+
+                                    if (packetLossTcp == replyTcping.Count)
+                                    {
+                                        BotClient.SendTextMessageAsync(message.Chat.Id,
+                                            "Packet loss : All");
+                                    }
+                                    else
+                                    {
+                                        List<int> tcpingList = new List<int>();
+                                        for (int i = 0; i < replyTcping.Count - 1; i++)
+                                            if (replyTcping[i] != 0)
+                                                tcpingList.Add(replyTcping[i]);
+                                        
+                                        BotClient.SendTextMessageAsync(message.Chat.Id,
+                                            $"{msgStr} : {tcpingList.Min()} / {tcpingList.Average():0.00} / {tcpingList.Max()}ms"
+                                            + $"\n\rPacket loss : {packetLossTcp} / {replyTcping.Count}");
+                                    }
+                                }
+                                break;
 
                             default:
                                 BotClient.SendTextMessageAsync(message.Chat.Id,
                                     @"意外的指令。");
-                            break;
+                                break;
+                        }
                     }
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine(exception);
-                    BotClient.SendTextMessageAsync(message.Chat.Id,
-                        @"非常抱歉，可能发生了一些意外的故障，请重试。");
-                }
-
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(exception);
+                        BotClient.SendTextMessageAsync(message.Chat.Id,
+                            @"非常抱歉，可能发生了一些意外的故障，请重试。");
+                    }
+                };
+                bgWorker.RunWorkerAsync();
             }
             else
             {
@@ -206,26 +208,12 @@ namespace ErikoBot
         {
             string dnsStr;
             if (googleDNS)
-            {
-                try
-                {
-                    dnsStr = new WebClient().DownloadString(
-                        $"https://dns.google.com/resolve?name={serverIpStr}&type=A");
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine("Google DNS:" + exception.Message);
-                    Console.WriteLine("Try Plus1s Proxy");
-
-                    dnsStr = new WebClient().DownloadString(
-                        $"https://plus1s.site/extdomains/dns.google.com/resolve?name={serverIpStr}&type=A");
-                }
-            }
+                dnsStr = new WebClient().DownloadString(
+                        $"https://dnsp.milione.cc/resolve/?name={serverIpStr}&type=A");
+            
             else
-            {
                 dnsStr = new WebClient().DownloadString(
                     $"https://dns.cloudflare.com/dns-query?ct=application/dns-json&name={serverIpStr}&type=A");
-            }
 
             JsonValue dnsAnswerJson = Json.Parse(dnsStr).AsObjectGet("Answer");
             string ipAnswerStr = dnsAnswerJson.AsArrayGet(0).AsObjectGetString("data");
@@ -255,16 +243,12 @@ namespace ErikoBot
 
             string locStr = webClient.DownloadString($"https://api.ip.sb/geoip/{ipStr}");
             JsonValue locDataJson = Json.Parse(locStr);
-            string addr = locDataJson.AsObjectGetString("country_code3");
+            string addr = locDataJson.AsObjectGetString("country");
             if (!string.IsNullOrWhiteSpace(locDataJson.AsObjectGetString("city")))
-            {
-                addr += "," + locDataJson.AsObjectGetString("city");
-            }
+                addr += " " + locDataJson.AsObjectGetString("city");
 
             if (!string.IsNullOrWhiteSpace(locDataJson.AsObjectGetString("organization")))
-            {
                 addr += " / " + locDataJson.AsObjectGetString("organization");
-            }
 
             return addr;
         }
