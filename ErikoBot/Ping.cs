@@ -30,7 +30,6 @@ namespace EasyChecker
                     point = new IPEndPoint(IPAddress.Parse(HttpDnsPodHostAddresses(ip).Trim()), port);
                 }
 
-
                 Stopwatch stopWatch = new Stopwatch();
 
                 stopWatch.Start();

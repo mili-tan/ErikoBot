@@ -149,35 +149,37 @@ namespace ErikoBot
 
                             case "/tcping":
                                 var ipPort = msgStr.Split(':', '：', ' ');
-                                if (ipPort.Length == 2)
+                                Console.WriteLine(ipPort.Count());
+                                List<int> replyTcping;
+
+                                replyTcping = ipPort.Length == 2
+                                    ? Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]))
+                                    : Ping.Tcping(ipPort[1], Convert.ToInt32(ipPort[2]));
+
+                                int packetLossTcp = 0;
+                                foreach (var item in replyTcping)
                                 {
-                                    var replyTcping = Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]));
+                                    if (item == 0)
+                                    {
+                                        packetLossTcp++;
+                                    }
+                                }
 
-                                    int packetLossTcp = 0;
-                                    foreach (var item in replyTcping)
-                                    {
-                                        if (item == 0)
-                                        {
-                                            packetLossTcp++;
-                                        }
-                                    }
+                                if (packetLossTcp == replyTcping.Count)
+                                {
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        "Packet loss : All");
+                                }
+                                else
+                                {
+                                    List<int> tcpingList = new List<int>();
+                                    for (int i = 0; i < replyTcping.Count - 1; i++)
+                                        if (replyTcping[i] != 0)
+                                            tcpingList.Add(replyTcping[i]);
 
-                                    if (packetLossTcp == replyTcping.Count)
-                                    {
-                                        BotClient.SendTextMessageAsync(message.Chat.Id,
-                                            "Packet loss : All");
-                                    }
-                                    else
-                                    {
-                                        List<int> tcpingList = new List<int>();
-                                        for (int i = 0; i < replyTcping.Count - 1; i++)
-                                            if (replyTcping[i] != 0)
-                                                tcpingList.Add(replyTcping[i]);
-                                        
-                                        BotClient.SendTextMessageAsync(message.Chat.Id,
-                                            $"{msgStr} : {tcpingList.Min()} / {tcpingList.Average():0.00} / {tcpingList.Max()}ms"
-                                            + $"\n\rPacket loss : {packetLossTcp} / {replyTcping.Count}");
-                                    }
+                                    BotClient.SendTextMessageAsync(message.Chat.Id,
+                                        $"{msgStr} : {tcpingList.Min()} / {tcpingList.Average():0.00} / {tcpingList.Max()}ms"
+                                        + $"\n\rPacket loss : {packetLossTcp} / {replyTcping.Count}");
                                 }
                                 break;
 
@@ -222,7 +224,6 @@ namespace ErikoBot
 
         public static string HttpDnsPodHostAddresses(string serverIpStr)
         {
-
             string dnsStr = new WebClient().DownloadString(
                 $"http://119.29.29.29/d?dn={serverIpStr}");
             dnsStr = dnsStr.Split(';')[0];
