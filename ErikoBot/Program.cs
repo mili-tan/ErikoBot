@@ -7,9 +7,10 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
-using EasyChecker;
+using mCopernicus.EasyChecker;
 using MojoUnity;
 
 namespace ErikoBot
@@ -24,13 +25,9 @@ namespace ErikoBot
             Console.WriteLine("Telegram Eriko Network Bot");
             string tokenStr;
             if (File.Exists("token.text"))
-            {
                 tokenStr = File.ReadAllText("token.text");
-            }
-            else if(!string.IsNullOrWhiteSpace(string.Join("",args)))
-            {
+            else if (!string.IsNullOrWhiteSpace(string.Join("", args)))
                 tokenStr = string.Join("", args);
-            }
             else
             {
                 Console.WriteLine("Token:");
@@ -63,10 +60,8 @@ namespace ErikoBot
             Console.WriteLine($"@{e.Message.From.Username}: " + e.Message.Text);
 
             if (IsIP(message.Text))
-            {
                 BotClient.SendTextMessageAsync(message.Chat.Id,
                     $"{message.Text} : {GeoIp(message.Text)} {GeoIsp(message.Text)}");
-            }
 
             if (message.Text.Replace("  ", " ").Split(' ').Length > 1)
             {
@@ -114,32 +109,22 @@ namespace ErikoBot
                                 break;
 
                             case "/ping":
-                                var replyPing = Ping.MPing(msgStr);
+                                var replyPing = MPing.Ping(msgStr);
 
                                 int packetLoss = 0;
                                 foreach (var item in replyPing)
-                                {
                                     if (item == 0)
-                                    {
                                         packetLoss++;
-                                    }
-                                }
 
                                 if (packetLoss == replyPing.Count)
-                                {
                                     BotClient.SendTextMessageAsync(message.Chat.Id,
                                          "Packet loss : All");
-                                }
                                 else
                                 {
                                     List<int> pingList = new List<int>();
                                     for (int i = 0; i < replyPing.Count - 1; i++)
-                                    {
                                         if (replyPing[i] != 0)
-                                        {
                                             pingList.Add(replyPing[i]);
-                                        }
-                                    }
 
                                     BotClient.SendTextMessageAsync(message.Chat.Id,
                                         $"{msgStr} : {pingList.Min()} / {pingList.Average():0.00} / {pingList.Max()}ms"
@@ -153,23 +138,17 @@ namespace ErikoBot
                                 List<int> replyTcping;
 
                                 replyTcping = ipPort.Length == 2
-                                    ? Ping.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]))
-                                    : Ping.Tcping(ipPort[1], Convert.ToInt32(ipPort[2]));
+                                    ? MPing.Tcping(ipPort[0], Convert.ToInt32(ipPort[1]))
+                                    : MPing.Tcping(ipPort[1], Convert.ToInt32(ipPort[2]));
 
                                 int packetLossTcp = 0;
                                 foreach (var item in replyTcping)
-                                {
                                     if (item == 0)
-                                    {
                                         packetLossTcp++;
-                                    }
-                                }
 
                                 if (packetLossTcp == replyTcping.Count)
-                                {
                                     BotClient.SendTextMessageAsync(message.Chat.Id,
                                         "Packet loss : All");
-                                }
                                 else
                                 {
                                     List<int> tcpingList = new List<int>();
