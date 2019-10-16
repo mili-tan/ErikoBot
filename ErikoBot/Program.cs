@@ -7,7 +7,6 @@ using Telegram.Bot.Args;
 using Telegram.Bot.Types.Enums;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
 using mCopernicus.EasyChecker;
