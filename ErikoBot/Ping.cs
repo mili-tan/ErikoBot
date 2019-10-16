@@ -13,7 +13,7 @@ namespace mCopernicus.EasyChecker
         public static List<int> Tcping(string ip,int port)
         {
             var times = new List<int>();
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 8; i++)
             {
                 Socket socks = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
                     {Blocking = true, ReceiveTimeout = 1000, SendTimeout = 1000};
@@ -32,7 +32,7 @@ namespace mCopernicus.EasyChecker
                 try
                 {
                     var result = socks.BeginConnect(point, null, null);
-                    if (!result.AsyncWaitHandle.WaitOne(2500, true)) continue;
+                    if (!result.AsyncWaitHandle.WaitOne(1000, true)) continue;
                 }
                 catch
                 {
@@ -55,7 +55,7 @@ namespace mCopernicus.EasyChecker
             byte[] bufferBytes = Encoding.Default.GetBytes("abcdefghijklmnopqrstuvwabcdefghi");
 
             var times = new List<int>();
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 8; i++)
             {
                 times.Add(Convert.ToInt32(ping.Send(ipStr, 50, bufferBytes).RoundtripTime));
                 Thread.Sleep(50);
