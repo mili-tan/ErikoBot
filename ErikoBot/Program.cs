@@ -53,7 +53,7 @@ namespace ErikoBot
             var message = e.Message;
 
             if (message == null) return;
-            if (message.Type != MessageType.TextMessage)
+            if (message.Type != MessageType.Text)
                 Console.WriteLine("不被支援的媒体类型。");
 
             Console.WriteLine($"@{e.Message.From.Username}: " + e.Message.Text);
